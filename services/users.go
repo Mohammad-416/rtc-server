@@ -37,6 +37,21 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	username := vars["user"]
+	userModel := &db.UserModel{
+		DB: db.DB,
+	}
+	user, err := userModel.GetUser(username)
+	if err != nil {
+		fmt.Println("Error : ", err)
+	}
+
+	fmt.Fprintf(w, "ID : %d , Username : %s, Github Id : %d, Email : %s, Created At : %s \n", user.ID, user.USERNAME, user.GITHUB_ID, user.EMAIL, user.CREATED_AT)
+
+}
+
+func GetUserByEmail(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	email := vars["email"]
 	userModel := &db.UserModel{
 		DB: db.DB,
@@ -52,11 +67,11 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	email := vars["email"]
+	username := vars["user"]
 	userModel := &db.UserModel{
 		DB: db.DB,
 	}
-	err := userModel.DeleteUser(email)
+	err := userModel.DeleteUser(username)
 	if err != nil {
 		fmt.Println("Error : ", err)
 	}

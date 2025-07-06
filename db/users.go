@@ -43,6 +43,18 @@ func (m *UserModel) CreateUser(githubID int64, username, email string) (User, er
 	}, nil
 }
 
+func (m *UserModel) GetUser(username string) (User, error) {
+	var user User
+	query := `SELECT id, github_id, username, email, created_at FROM users WHERE username = $1`
+
+	row := m.DB.QueryRow(query, username)
+	err := row.Scan(&user.ID, &user.GITHUB_ID, &user.USERNAME, &user.EMAIL, &user.CREATED_AT)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
 func (m *UserModel) GetUserByEmail(email string) (User, error) {
 	var user User
 	query := `SELECT id, github_id, username, email, created_at FROM users WHERE email = $1`
@@ -54,6 +66,7 @@ func (m *UserModel) GetUserByEmail(email string) (User, error) {
 	}
 	return user, nil
 }
+
 func (m *UserModel) GetAllUsers() ([]User, error) {
 	query := `SELECT id, github_id, username, email, created_at FROM users`
 
@@ -87,9 +100,9 @@ func (m *UserModel) UpdateUser(id uuid.UUID, username, email string) error {
 	return err
 }
 
-func (m *UserModel) DeleteUser(email string) error {
-	query := `DELETE FROM users WHERE email = $1`
+func (m *UserModel) DeleteUser(username string) error {
+	query := `DELETE FROM users WHERE username = $1`
 
-	_, err := m.DB.Exec(query, email)
+	_, err := m.DB.Exec(query, username)
 	return err
 }
