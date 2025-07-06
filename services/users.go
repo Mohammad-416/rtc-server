@@ -15,6 +15,8 @@ func GetUsersLen(w http.ResponseWriter, r *http.Request) {
 	users, err := userModel.GetAllUsers()
 	if err != nil {
 		fmt.Println("Error : ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	fmt.Fprintf(w, "No of Users : %d", len(users))
 
@@ -27,6 +29,8 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := userModel.GetAllUsers()
 	if err != nil {
 		fmt.Println("Error : ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	for i := 0; i < len(users); i++ {
 		user := users[i]
@@ -44,6 +48,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	user, err := userModel.GetUser(username)
 	if err != nil {
 		fmt.Println("Error : ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	fmt.Fprintf(w, "ID : %d , Username : %s, Github Id : %d, Email : %s, Created At : %s \n", user.ID, user.USERNAME, user.GITHUB_ID, user.EMAIL, user.CREATED_AT)
@@ -59,6 +65,8 @@ func GetUserByEmail(w http.ResponseWriter, r *http.Request) {
 	user, err := userModel.GetUserByEmail(email)
 	if err != nil {
 		fmt.Println("Error : ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	fmt.Fprintf(w, "ID : %d , Username : %s, Github Id : %d, Email : %s, Created At : %s \n", user.ID, user.USERNAME, user.GITHUB_ID, user.EMAIL, user.CREATED_AT)
@@ -74,6 +82,8 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	err := userModel.DeleteUser(username)
 	if err != nil {
 		fmt.Println("Error : ", err)
+		w.WriteHeader(http.StatusExpectationFailed)
+
 	}
 
 }

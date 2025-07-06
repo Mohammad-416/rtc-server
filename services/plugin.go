@@ -23,6 +23,7 @@ func PushProject(w http.ResponseWriter, r *http.Request) {
 	user, err := userModel.GetUserByEmail(metaUser.EMAIL)
 	if err != nil {
 		fmt.Println("Error : ", err)
+		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		fmt.Println(user.USERNAME, user.ID, user.GITHUB_ID, user.EMAIL, user.CREATED_AT)
 
@@ -33,11 +34,11 @@ func PushProject(w http.ResponseWriter, r *http.Request) {
 		//Check if a project by this name already exists
 		project, err := projectModel.GetProjectByName(user.ID, metaUser.PROJECT_NAME)
 		if err != nil {
-			fmt.Println("Error : ", err)
 			projectModel.CreateProject(user.ID, metaUser.PROJECT_NAME, metaUser.PROJECT_NAME)
 			fmt.Println("Project Created Succesfully")
 		} else {
 			fmt.Println("Project already exists with the name : ", project.Name)
+			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
 

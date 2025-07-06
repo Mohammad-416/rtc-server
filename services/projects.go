@@ -17,6 +17,7 @@ func NProjects(w http.ResponseWriter, r *http.Request) {
 	user, err := userModel.GetUser(username)
 	if err != nil {
 		fmt.Println("Invalid Username")
+		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		owner_id := user.ID
 		projectModel := &db.ProjectModel{
@@ -25,6 +26,7 @@ func NProjects(w http.ResponseWriter, r *http.Request) {
 		projects, err := projectModel.GetProjectsByUser(owner_id)
 		if err != nil {
 			fmt.Println("Error : ", err)
+			w.WriteHeader(http.StatusBadRequest)
 		}
 		fmt.Fprintf(w, "No of Projects : %d", len(projects))
 	}
@@ -39,6 +41,7 @@ func GetProjects(w http.ResponseWriter, r *http.Request) {
 	user, err := userModel.GetUser(username)
 	if err != nil {
 		fmt.Println("Invalid Username")
+		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		owner_id := user.ID
 		projectModel := &db.ProjectModel{
@@ -47,6 +50,7 @@ func GetProjects(w http.ResponseWriter, r *http.Request) {
 		projects, err := projectModel.GetProjectsByUser(owner_id)
 		if err != nil {
 			fmt.Println("Error : ", err)
+			w.WriteHeader(http.StatusBadRequest)
 		}
 
 		for i := 0; i < len(projects); i++ {
@@ -66,6 +70,7 @@ func GetProject(w http.ResponseWriter, r *http.Request) {
 	user, err := userModel.GetUser(username)
 	if err != nil {
 		http.Error(w, "Invalid owner ID", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else {
 		ownerID := user.ID
@@ -75,6 +80,8 @@ func GetProject(w http.ResponseWriter, r *http.Request) {
 		project, err := projectModel.GetProjectByName(ownerID, nameStr)
 		if err != nil {
 			fmt.Println("Error : ", err)
+			w.WriteHeader(http.StatusBadRequest)
+
 		}
 
 		fmt.Fprintf(w, "ID : %d , Owner ID : %d, Name : %s, Description : %s, Created At : %s \n", project.ID, project.OwnerID, project.Name, project.Description, project.CreatedAt)
@@ -92,6 +99,8 @@ func DeleteProject(w http.ResponseWriter, r *http.Request) {
 	user, err := userModel.GetUser(username)
 	if err != nil {
 		http.Error(w, "Invalid owner ID", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+
 		return
 	} else {
 		ownerID := user.ID
@@ -101,6 +110,8 @@ func DeleteProject(w http.ResponseWriter, r *http.Request) {
 		project, err := projectModel.GetProjectByName(ownerID, projectName)
 		if err != nil {
 			fmt.Println("Error : ", err)
+			w.WriteHeader(http.StatusBadRequest)
+
 		}
 		projectID := project.ID
 		err = projectModel.DeleteProject(ownerID, projectID)
