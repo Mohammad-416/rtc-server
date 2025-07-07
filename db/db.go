@@ -24,9 +24,14 @@ func InitDB() {
 	log.Println("Initializing User Table")
 	InitUserTable()
 	log.Println("Initialized User Table Successfully")
+
 	log.Println("Initializing Project Table")
 	InitProjectTable()
 	log.Println("Initialized Project Table Successfully")
+
+	log.Println("Initializing Github Data Table")
+	InitGithubDataTable()
+	log.Println("Initialized Github Data Table Successfully")
 }
 
 func InitUserTable() {
@@ -57,5 +62,21 @@ func InitProjectTable() {
 	_, err := DB.Exec(query)
 	if err != nil {
 		log.Fatal("Failed to create project table: ", err)
+	}
+}
+
+func InitGithubDataTable() {
+	query := `
+	CREATE TABLE IF NOT EXISTS github_data (
+		id UUID PRIMARY KEY,
+		github_token TEXT NOT NULL,
+		username TEXT NOT NULL,
+		user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	)`
+
+	_, err := DB.Exec(query)
+	if err != nil {
+		log.Fatal("Failed to create github_data table: ", err)
 	}
 }

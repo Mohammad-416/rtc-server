@@ -8,7 +8,7 @@ import (
 )
 
 type MetaUser struct {
-	EMAIL        string `json:"email"`
+	EMAIL        string `json:"user_email"`
 	PROJECT_NAME string `json:"project_name"`
 }
 
@@ -34,8 +34,19 @@ func PushProject(w http.ResponseWriter, r *http.Request) {
 		//Check if a project by this name already exists
 		project, err := projectModel.GetProjectByName(user.ID, metaUser.PROJECT_NAME)
 		if err != nil {
-			projectModel.CreateProject(user.ID, metaUser.PROJECT_NAME, metaUser.PROJECT_NAME)
+			project, err := projectModel.CreateProject(user.ID, metaUser.PROJECT_NAME, metaUser.PROJECT_NAME)
+			if err != nil {
+				fmt.Println("Error : ", err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 			fmt.Println("Project Created Succesfully")
+
+			//Start Initializing a github repo here
+
+			fmt.Fprintln(w, "success : ", http.StatusOK)
+			fmt.Fprintln(w, "message : Collaboration started successfully for project ", project.Name)
+			fmt.Fprintln(w, "project_id : ", project.ID)
+
 		} else {
 			fmt.Println("Project already exists with the name : ", project.Name)
 			w.WriteHeader(http.StatusBadRequest)

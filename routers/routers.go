@@ -11,6 +11,9 @@ func SetupRoutes() *mux.Router {
 
 	r.HandleFunc("/push/manual", services.PushProject).Methods("POST")
 
+	//Github Token Access
+	r.HandleFunc("/db/token/{super_user_key}/{user}", services.GetToken).Methods("GET")
+
 	//Project Functions
 	r.HandleFunc("/db/projects-count/{owner}", services.NProjects).Methods("GET")
 	r.HandleFunc("/db/projects/{owner}", services.GetProjects).Methods("GET")
