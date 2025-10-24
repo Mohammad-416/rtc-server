@@ -32,6 +32,10 @@ func InitDB() {
 	log.Println("Initializing Github Data Table")
 	InitGithubDataTable()
 	log.Println("Initialized Github Data Table Successfully")
+
+	log.Println("Initializing Collaborator Table")
+	InitCollaboratorTable()
+	log.Println("Initialized Collaborator Table Successfully")
 }
 
 func InitUserTable() {
@@ -78,5 +82,23 @@ func InitGithubDataTable() {
 	_, err := DB.Exec(query)
 	if err != nil {
 		log.Fatal("Failed to create github_data table: ", err)
+	}
+}
+
+func InitCollaboratorTable() {
+	query := `
+	CREATE TABLE IF NOT EXISTS collaborators (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		user_id UUID REFERENCES users(id),
+		project_id UUID REFERENCES projects(id),
+		status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(user_id, project_id)
+	)`
+
+	_, err := DB.Exec(query)
+	if err != nil {
+		log.Fatal("Failed to create collaborators table: ", err)
 	}
 }

@@ -13,6 +13,16 @@ type MetaUser struct {
 	PROJECT_NAME string `json:"project_name"`
 }
 
+type CollabRequest struct {
+	CollaboratorEmail string `json:"collaborator_email"`
+	ProjectID         string `json:"project_id"`
+}
+
+type CollabApproval struct {
+	CollabID string `json:"collab_id"`
+	Status   string `json:"status"`
+}
+
 func PushProject(w http.ResponseWriter, r *http.Request) {
 
 	var metaUser MetaUser
@@ -101,4 +111,43 @@ func PushProject(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+}
+
+func RequestCollaboration(w http.ResponseWriter, r *http.Request) {
+	var req CollabRequest
+	json.NewDecoder(r.Body).Decode(&req)
+
+	userModel := &db.UserModel{DB: db.DB}
+	user, err := userModel.GetUserByEmail(req.CollaboratorEmail)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintln(w, "User not found")
+		return
+	}
+
+	query := `INSERT INTO collaborators (user_id, project_id) VALUES ($1, $2) RETURNING id`
+	var collabID string
+	err = db.DB.QueryRow(query, user.ID, req.ProjectID).Scan(&collabID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error creating request")
+		return
+	}
+
+	fmt.Fprintf(w, "Collaboration request created: %s", collabID)
+}
+
+func ApproveCollaboration(w http.ResponseWriter, r *http.Request) {
+	var req CollabApproval
+	json.NewDecoder(r.Body).Decode(&req)
+
+	query := `UPDATE collaborators SET status = $1 WHERE id = $2`
+	_, err := db.DB.Exec(query, req.Status, req.CollabID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Error updating status")
+		return
+	}
+
+	fmt.Fprintf(w, "Collaboration %s", req.Status)
 }
