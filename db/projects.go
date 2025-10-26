@@ -69,6 +69,22 @@ func (m *ProjectModel) GetProjectsByUser(ownerID uuid.UUID) ([]Project, error) {
 	return projects, nil
 }
 
+func (m *ProjectModel) GetProjectByID(projectID uuid.UUID) (Project, error) {
+	query := `
+	SELECT id, owner_id, name, description, created_at
+	FROM projects
+	WHERE id = $1
+	`
+
+	var p Project
+	err := m.DB.QueryRow(query, projectID).Scan(&p.ID, &p.OwnerID, &p.Name, &p.Description, &p.CreatedAt)
+	if err != nil {
+		return Project{}, err
+	}
+
+	return p, nil
+}
+
 func (m *ProjectModel) GetProjectByName(ownerID uuid.UUID, name string) (Project, error) {
 	query := `
 	SELECT id, owner_id, name, description, created_at

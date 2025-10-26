@@ -13,15 +13,15 @@ type MetaUser struct {
 	PROJECT_NAME string `json:"project_name"`
 }
 
-type CollabRequest struct {
-	CollaboratorEmail string `json:"collaborator_email"`
-	ProjectID         string `json:"project_id"`
-}
+// type CollabRequest struct {
+// 	CollaboratorEmail string `json:"collaborator_email"`
+// 	ProjectID         string `json:"project_id"`
+// }
 
-type CollabApproval struct {
-	CollabID string `json:"collab_id"`
-	Status   string `json:"status"`
-}
+// type CollabApproval struct {
+// 	CollabID string `json:"collab_id"`
+// 	Status   string `json:"status"`
+// }
 
 func PushProject(w http.ResponseWriter, r *http.Request) {
 
@@ -113,148 +113,148 @@ func PushProject(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func RequestCollaboration(w http.ResponseWriter, r *http.Request) {
-	var req CollabRequest
-	json.NewDecoder(r.Body).Decode(&req)
+// func RequestCollaboration(w http.ResponseWriter, r *http.Request) {
+// 	var req CollabRequest
+// 	json.NewDecoder(r.Body).Decode(&req)
 
-	userModel := &db.UserModel{DB: db.DB}
-	user, err := userModel.GetUserByEmail(req.CollaboratorEmail)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "User not found")
-		return
-	}
+// 	userModel := &db.UserModel{DB: db.DB}
+// 	user, err := userModel.GetUserByEmail(req.CollaboratorEmail)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusNotFound)
+// 		fmt.Fprintln(w, "User not found")
+// 		return
+// 	}
 
-	query := `INSERT INTO collaborators (user_id, project_id) VALUES ($1, $2) RETURNING id`
-	var collabID string
-	err = db.DB.QueryRow(query, user.ID, req.ProjectID).Scan(&collabID)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Error creating request")
-		return
-	}
+// 	query := `INSERT INTO collaborators (user_id, project_id) VALUES ($1, $2) RETURNING id`
+// 	var collabID string
+// 	err = db.DB.QueryRow(query, user.ID, req.ProjectID).Scan(&collabID)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprintln(w, "Error creating request")
+// 		return
+// 	}
 
-	fmt.Fprintf(w, "Collaboration request created: %s", collabID)
-}
+// 	fmt.Fprintf(w, "Collaboration request created: %s", collabID)
+// }
 
-func ApproveCollaboration(w http.ResponseWriter, r *http.Request) {
-	var req CollabApproval
-	json.NewDecoder(r.Body).Decode(&req)
+// func ApproveCollaboration(w http.ResponseWriter, r *http.Request) {
+// 	var req CollabApproval
+// 	json.NewDecoder(r.Body).Decode(&req)
 
-	query := `UPDATE collaborators SET status = $1 WHERE id = $2`
-	_, err := db.DB.Exec(query, req.Status, req.CollabID)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Error updating status")
-		return
-	}
+// 	query := `UPDATE collaborators SET status = $1 WHERE id = $2`
+// 	_, err := db.DB.Exec(query, req.Status, req.CollabID)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprintln(w, "Error updating status")
+// 		return
+// 	}
 
-	fmt.Fprintf(w, "Collaboration %s", req.Status)
-}
+// 	fmt.Fprintf(w, "Collaboration %s", req.Status)
+// }
 
-func GetProjectCollaborators(w http.ResponseWriter, r *http.Request) {
-	projectID := r.URL.Query().Get("project_id")
-	if projectID == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "project_id is required")
-		return
-	}
+// func GetProjectCollaborators(w http.ResponseWriter, r *http.Request) {
+// 	projectID := r.URL.Query().Get("project_id")
+// 	if projectID == "" {
+// 		w.WriteHeader(http.StatusBadRequest)
+// 		fmt.Fprintln(w, "project_id is required")
+// 		return
+// 	}
 
-	query := `
-		SELECT c.id, c.status, c.created_at, u.username, u.email 
-		FROM collaborators c
-		JOIN users u ON c.user_id = u.id
-		WHERE c.project_id = $1
-		ORDER BY c.created_at DESC
-	`
+// 	query := `
+// 		SELECT c.id, c.status, c.created_at, u.username, u.email
+// 		FROM collaborators c
+// 		JOIN users u ON c.user_id = u.id
+// 		WHERE c.project_id = $1
+// 		ORDER BY c.created_at DESC
+// 	`
 
-	rows, err := db.DB.Query(query, projectID)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Error fetching collaborators")
-		return
-	}
-	defer rows.Close()
+// 	rows, err := db.DB.Query(query, projectID)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprintln(w, "Error fetching collaborators")
+// 		return
+// 	}
+// 	defer rows.Close()
 
-	var collaborators []map[string]interface{}
-	for rows.Next() {
-		var id, status, username, email string
-		var createdAt string
-		err := rows.Scan(&id, &status, &createdAt, &username, &email)
-		if err != nil {
-			continue
-		}
-		collaborators = append(collaborators, map[string]interface{}{
-			"collab_id":  id,
-			"status":     status,
-			"username":   username,
-			"email":      email,
-			"created_at": createdAt,
-		})
-	}
+// 	var collaborators []map[string]interface{}
+// 	for rows.Next() {
+// 		var id, status, username, email string
+// 		var createdAt string
+// 		err := rows.Scan(&id, &status, &createdAt, &username, &email)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		collaborators = append(collaborators, map[string]interface{}{
+// 			"collab_id":  id,
+// 			"status":     status,
+// 			"username":   username,
+// 			"email":      email,
+// 			"created_at": createdAt,
+// 		})
+// 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"project_id":    projectID,
-		"collaborators": collaborators,
-		"total":         len(collaborators),
-	})
-}
+// 	w.Header().Set("Content-Type", "application/json")
+// 	json.NewEncoder(w).Encode(map[string]interface{}{
+// 		"project_id":    projectID,
+// 		"collaborators": collaborators,
+// 		"total":         len(collaborators),
+// 	})
+// }
 
-func GetUserCollaborationRequests(w http.ResponseWriter, r *http.Request) {
-	userEmail := r.URL.Query().Get("user_email")
-	if userEmail == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "user_email is required")
-		return
-	}
+// func GetUserCollaborationRequests(w http.ResponseWriter, r *http.Request) {
+// 	userEmail := r.URL.Query().Get("user_email")
+// 	if userEmail == "" {
+// 		w.WriteHeader(http.StatusBadRequest)
+// 		fmt.Fprintln(w, "user_email is required")
+// 		return
+// 	}
 
-	userModel := &db.UserModel{DB: db.DB}
-	user, err := userModel.GetUserByEmail(userEmail)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "User not found")
-		return
-	}
+// 	userModel := &db.UserModel{DB: db.DB}
+// 	user, err := userModel.GetUserByEmail(userEmail)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusNotFound)
+// 		fmt.Fprintln(w, "User not found")
+// 		return
+// 	}
 
-	query := `
-		SELECT c.id, c.status, c.created_at, p.name, p.description, u.username as owner_username
-		FROM collaborators c
-		JOIN projects p ON c.project_id = p.id
-		JOIN users u ON p.owner_id = u.id
-		WHERE c.user_id = $1 AND c.status = 'pending'
-		ORDER BY c.created_at DESC
-	`
+// 	query := `
+// 		SELECT c.id, c.status, c.created_at, p.name, p.description, u.username as owner_username
+// 		FROM collaborators c
+// 		JOIN projects p ON c.project_id = p.id
+// 		JOIN users u ON p.owner_id = u.id
+// 		WHERE c.user_id = $1 AND c.status = 'pending'
+// 		ORDER BY c.created_at DESC
+// 	`
 
-	rows, err := db.DB.Query(query, user.ID)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Error fetching requests")
-		return
-	}
-	defer rows.Close()
+// 	rows, err := db.DB.Query(query, user.ID)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprintln(w, "Error fetching requests")
+// 		return
+// 	}
+// 	defer rows.Close()
 
-	var requests []map[string]interface{}
-	for rows.Next() {
-		var collabID, status, createdAt, projectName, projectDesc, ownerUsername string
-		err := rows.Scan(&collabID, &status, &createdAt, &projectName, &projectDesc, &ownerUsername)
-		if err != nil {
-			continue
-		}
-		requests = append(requests, map[string]interface{}{
-			"collab_id":      collabID,
-			"status":         status,
-			"project_name":   projectName,
-			"description":    projectDesc,
-			"owner_username": ownerUsername,
-			"created_at":     createdAt,
-		})
-	}
+// 	var requests []map[string]interface{}
+// 	for rows.Next() {
+// 		var collabID, status, createdAt, projectName, projectDesc, ownerUsername string
+// 		err := rows.Scan(&collabID, &status, &createdAt, &projectName, &projectDesc, &ownerUsername)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		requests = append(requests, map[string]interface{}{
+// 			"collab_id":      collabID,
+// 			"status":         status,
+// 			"project_name":   projectName,
+// 			"description":    projectDesc,
+// 			"owner_username": ownerUsername,
+// 			"created_at":     createdAt,
+// 		})
+// 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"user_email": userEmail,
-		"requests":   requests,
-		"total":      len(requests),
-	})
-}
+// 	w.Header().Set("Content-Type", "application/json")
+// 	json.NewEncoder(w).Encode(map[string]interface{}{
+// 		"user_email": userEmail,
+// 		"requests":   requests,
+// 		"total":      len(requests),
+// 	})
+// }
