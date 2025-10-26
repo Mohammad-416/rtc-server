@@ -1,12 +1,12 @@
 Sql table update
-
 Request Collaboration
-Takes a collaborator's email and project ID, finds the user in the database, then creates a new collaboration entry in the collaborators table with a pending status. Returns the generated collaboration ID for tracking.
 ApproveCollaboration
-Updates the status of an existing collaboration request (identified by collab_id) to either 'approved', 'rejected', or 'pending'. This allows project owners or invited users to accept/reject collaboration invitations.
-
-
 GetProjectCollaborators
-Fetches and returns a JSON list of all collaborators for a specific project, including their status, username, email, and when they were added. Useful for displaying team members in Unity's UI.
 GetUserCollaborationRequests
-Retrieves all pending collaboration invitations for a specific user (by email), showing project details and owner information. Perfect for a "notifications" or "pending invites" feature in Unity.
+
+/services/collaborator.go - NEW
+/db/collaborator.go - NEW
+/db/users.go - UPDATED (added GetUserByID)
+/db/projects.go - UPDATED (added GetProjectByID)
+/routers/routers.go - UPDATED (added 6 routes)
+/services/plugin.go - CLEANED (removed old functions)
