@@ -55,6 +55,18 @@ func (m *UserModel) GetUser(username string) (User, error) {
 	return user, nil
 }
 
+func (m *UserModel) GetUserByID(userID uuid.UUID) (User, error) {
+	var user User
+	query := `SELECT id, github_id, username, email, created_at FROM users WHERE id = $1`
+
+	row := m.DB.QueryRow(query, userID)
+	err := row.Scan(&user.ID, &user.GITHUB_ID, &user.USERNAME, &user.EMAIL, &user.CREATED_AT)
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
 func (m *UserModel) GetUserByEmail(email string) (User, error) {
 	var user User
 	query := `SELECT id, github_id, username, email, created_at FROM users WHERE email = $1`
