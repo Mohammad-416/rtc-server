@@ -40,5 +40,24 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/collab/token/{super_user_key}/{username}", services.GetCollaboratorToken).Methods("GET")
 	r.HandleFunc("/collab/remove/{collab_id}", services.RemoveCollaborator).Methods("DELETE")
 
+	// Collaborator Routes
+	r.HandleFunc("/collab/request", services.RequestCollaboration).Methods("POST")
+	r.HandleFunc("/collab/approve", services.ApproveCollaboration).Methods("POST")
+	r.HandleFunc("/collab/project", services.GetProjectCollaborators).Methods("GET")
+	r.HandleFunc("/collab/user/requests", services.GetUserCollaborationRequests).Methods("GET")
+	r.HandleFunc("/collab/token/{super_user_key}/{username}", services.GetCollaboratorToken).Methods("GET")
+	r.HandleFunc("/collab/remove/{collab_id}", services.RemoveCollaborator).Methods("DELETE")
+
+	// WebSocket Routes
+	r.HandleFunc("/ws", services.HandleWebSocket).Methods("GET")
+	r.HandleFunc("/ws/online-users", services.GetOnlineUsers).Methods("GET")
+	r.HandleFunc("/ws/user-status", services.CheckUserOnlineStatus).Methods("GET")
+
+	// File Sharing Routes
+	r.HandleFunc("/share/file", services.ShareFile).Methods("POST")
+	r.HandleFunc("/share/code", services.ShareCode).Methods("POST")
+	r.HandleFunc("/share/bulk", services.ShareBulkFiles).Methods("POST")
+	r.HandleFunc("/share/collaborators", services.GetShareableCollaborators).Methods("GET")
+
 	return r
 }

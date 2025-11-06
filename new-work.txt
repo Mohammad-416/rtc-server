@@ -10,3 +10,15 @@ GetUserCollaborationRequests
 /db/projects.go - UPDATED (added GetProjectByID)
 /routers/routers.go - UPDATED (added 6 routes)
 /services/plugin.go - CLEANED (removed old functions)
+
+WebSocket Communication 
+File Sharing Formats -
+Security - Project-based permissions and validation
+Collaborator Management - Team awareness with online status
+Notifications 
+Performance 
+
+dependiceyr :
+github.com/gorilla/websocket
+github.com/gorilla/mux
+github.com/google/uuid
