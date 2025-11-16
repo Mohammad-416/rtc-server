@@ -8,60 +8,48 @@ import (
 )
 
 type Collaborator struct {
-	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id"`
-	ProjectID uuid.UUID `json:"project_id"`
-	Status    string    `json:"status"` // pending, approved, rejected
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type CollaboratorWithDetails struct {
-	ID            uuid.UUID `json:"collab_id"`
-	Status        string    `json:"status"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	Username      string    `json:"username"`
-	Email         string    `json:"email"`
-	ProjectName   string    `json:"project_name,omitempty"`
-	ProjectDesc   string    `json:"project_description,omitempty"`
-	OwnerUsername string    `json:"owner_username,omitempty"`
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	ProjectID uuid.UUID
+	Status    string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type CollaboratorModel struct {
 	DB *sql.DB
 }
 
-// CreateCollaboration - Creates a new collaboration request with default pending status
-func (m *CollaboratorModel) CreateCollaboration(userID, projectID uuid.UUID, status string) (Collaborator, error) {
-	id := uuid.New()
-	createdAt := time.Now()
-	updatedAt := time.Now()
-
-	// Default to pending if no status provided
-	if status == "" {
-		status = "pending"
-	}
-
+// CreateCollaboration - Creates a new collaboration request
+func (m *CollaboratorModel) CreateCollaboration(userID uuid.UUID, projectID uuid.UUID, status string) (*Collaborator, error) {
 	query := `
 		INSERT INTO collaborators (id, user_id, project_id, status, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, user_id, project_id, status, created_at, updated_at
 	`
 
+	id := uuid.New()
+	now := time.Now()
+
 	var collab Collaborator
-	err := m.DB.QueryRow(query, id, userID, projectID, status, createdAt, updatedAt).
-		Scan(&collab.ID, &collab.UserID, &collab.ProjectID, &collab.Status, &collab.CreatedAt, &collab.UpdatedAt)
+	err := m.DB.QueryRow(query, id, userID, projectID, status, now, now).Scan(
+		&collab.ID,
+		&collab.UserID,
+		&collab.ProjectID,
+		&collab.Status,
+		&collab.CreatedAt,
+		&collab.UpdatedAt,
+	)
 
 	if err != nil {
-		return Collaborator{}, err
+		return nil, err
 	}
 
-	return collab, nil
+	return &collab, nil
 }
 
-// GetCollaborationByID - Gets a specific collaboration by ID
-func (m *CollaboratorModel) GetCollaborationByID(collabID uuid.UUID) (Collaborator, error) {
+// GetCollaborationByID - Retrieves collaboration by ID
+func (m *CollaboratorModel) GetCollaborationByID(collabID uuid.UUID) (*Collaborator, error) {
 	query := `
 		SELECT id, user_id, project_id, status, created_at, updated_at
 		FROM collaborators
@@ -69,37 +57,67 @@ func (m *CollaboratorModel) GetCollaborationByID(collabID uuid.UUID) (Collaborat
 	`
 
 	var collab Collaborator
-	err := m.DB.QueryRow(query, collabID).
-		Scan(&collab.ID, &collab.UserID, &collab.ProjectID, &collab.Status, &collab.CreatedAt, &collab.UpdatedAt)
+	err := m.DB.QueryRow(query, collabID).Scan(
+		&collab.ID,
+		&collab.UserID,
+		&collab.ProjectID,
+		&collab.Status,
+		&collab.CreatedAt,
+		&collab.UpdatedAt,
+	)
 
 	if err != nil {
-		return Collaborator{}, err
+		return nil, err
 	}
 
-	return collab, nil
+	return &collab, nil
 }
 
-// UpdateCollaborationStatus - Updates collaboration status (approved/rejected)
+// GetCollaborationByUserAndProject - Get collaboration by user and project
+func (m *CollaboratorModel) GetCollaborationByUserAndProject(userID uuid.UUID, projectID uuid.UUID) (*Collaborator, error) {
+	query := `
+		SELECT id, user_id, project_id, status, created_at, updated_at
+		FROM collaborators
+		WHERE user_id = $1 AND project_id = $2
+	`
+
+	var collab Collaborator
+	err := m.DB.QueryRow(query, userID, projectID).Scan(
+		&collab.ID,
+		&collab.UserID,
+		&collab.ProjectID,
+		&collab.Status,
+		&collab.CreatedAt,
+		&collab.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &collab, nil
+}
+
+// UpdateCollaborationStatus - Updates collaboration status
 func (m *CollaboratorModel) UpdateCollaborationStatus(collabID uuid.UUID, status string) error {
 	query := `
-		UPDATE collaborators 
+		UPDATE collaborators
 		SET status = $1, updated_at = $2
 		WHERE id = $3
 	`
 
-	updatedAt := time.Now()
-	_, err := m.DB.Exec(query, status, updatedAt, collabID)
+	now := time.Now()
+	_, err := m.DB.Exec(query, status, now, collabID)
 	return err
 }
 
-// GetProjectCollaborators - Gets all collaborators for a project with user details
-func (m *CollaboratorModel) GetProjectCollaborators(projectID uuid.UUID) ([]CollaboratorWithDetails, error) {
+// GetProjectCollaborators - Gets all collaborators for a project
+func (m *CollaboratorModel) GetProjectCollaborators(projectID uuid.UUID) ([]Collaborator, error) {
 	query := `
-		SELECT c.id, c.status, c.created_at, c.updated_at, u.username, u.email
-		FROM collaborators c
-		JOIN users u ON c.user_id = u.id
-		WHERE c.project_id = $1
-		ORDER BY c.created_at DESC
+		SELECT id, user_id, project_id, status, created_at, updated_at
+		FROM collaborators
+		WHERE project_id = $1
+		ORDER BY created_at DESC
 	`
 
 	rows, err := m.DB.Query(query, projectID)
@@ -108,13 +126,19 @@ func (m *CollaboratorModel) GetProjectCollaborators(projectID uuid.UUID) ([]Coll
 	}
 	defer rows.Close()
 
-	var collaborators []CollaboratorWithDetails
+	var collaborators []Collaborator
 	for rows.Next() {
-		var collab CollaboratorWithDetails
-		err := rows.Scan(&collab.ID, &collab.Status, &collab.CreatedAt, &collab.UpdatedAt,
-			&collab.Username, &collab.Email)
+		var collab Collaborator
+		err := rows.Scan(
+			&collab.ID,
+			&collab.UserID,
+			&collab.ProjectID,
+			&collab.Status,
+			&collab.CreatedAt,
+			&collab.UpdatedAt,
+		)
 		if err != nil {
-			continue
+			return nil, err
 		}
 		collaborators = append(collaborators, collab)
 	}
@@ -123,16 +147,12 @@ func (m *CollaboratorModel) GetProjectCollaborators(projectID uuid.UUID) ([]Coll
 }
 
 // GetUserPendingRequests - Gets all pending collaboration requests for a user
-func (m *CollaboratorModel) GetUserPendingRequests(userID uuid.UUID) ([]CollaboratorWithDetails, error) {
+func (m *CollaboratorModel) GetUserPendingRequests(userID uuid.UUID) ([]Collaborator, error) {
 	query := `
-		SELECT c.id, c.status, c.created_at, c.updated_at, 
-		       p.name as project_name, p.description as project_desc, 
-		       u.username as owner_username
-		FROM collaborators c
-		JOIN projects p ON c.project_id = p.id
-		JOIN users u ON p.owner_id = u.id
-		WHERE c.user_id = $1 AND c.status = 'pending'
-		ORDER BY c.created_at DESC
+		SELECT id, user_id, project_id, status, created_at, updated_at
+		FROM collaborators
+		WHERE user_id = $1 AND status = 'pending'
+		ORDER BY created_at DESC
 	`
 
 	rows, err := m.DB.Query(query, userID)
@@ -141,31 +161,33 @@ func (m *CollaboratorModel) GetUserPendingRequests(userID uuid.UUID) ([]Collabor
 	}
 	defer rows.Close()
 
-	var requests []CollaboratorWithDetails
+	var requests []Collaborator
 	for rows.Next() {
-		var req CollaboratorWithDetails
-		err := rows.Scan(&req.ID, &req.Status, &req.CreatedAt, &req.UpdatedAt,
-			&req.ProjectName, &req.ProjectDesc, &req.OwnerUsername)
+		var collab Collaborator
+		err := rows.Scan(
+			&collab.ID,
+			&collab.UserID,
+			&collab.ProjectID,
+			&collab.Status,
+			&collab.CreatedAt,
+			&collab.UpdatedAt,
+		)
 		if err != nil {
-			continue
+			return nil, err
 		}
-		requests = append(requests, req)
+		requests = append(requests, collab)
 	}
 
 	return requests, nil
 }
 
-// GetUserAllCollaborations - Gets all collaborations for a user (any status)
-func (m *CollaboratorModel) GetUserAllCollaborations(userID uuid.UUID) ([]CollaboratorWithDetails, error) {
+// GetUserCollaborations - Gets all collaborations for a user (any status)
+func (m *CollaboratorModel) GetUserCollaborations(userID uuid.UUID) ([]Collaborator, error) {
 	query := `
-		SELECT c.id, c.status, c.created_at, c.updated_at, 
-		       p.name as project_name, p.description as project_desc, 
-		       u.username as owner_username
-		FROM collaborators c
-		JOIN projects p ON c.project_id = p.id
-		JOIN users u ON p.owner_id = u.id
-		WHERE c.user_id = $1
-		ORDER BY c.created_at DESC
+		SELECT id, user_id, project_id, status, created_at, updated_at
+		FROM collaborators
+		WHERE user_id = $1
+		ORDER BY updated_at DESC
 	`
 
 	rows, err := m.DB.Query(query, userID)
@@ -174,13 +196,19 @@ func (m *CollaboratorModel) GetUserAllCollaborations(userID uuid.UUID) ([]Collab
 	}
 	defer rows.Close()
 
-	var collaborations []CollaboratorWithDetails
+	var collaborations []Collaborator
 	for rows.Next() {
-		var collab CollaboratorWithDetails
-		err := rows.Scan(&collab.ID, &collab.Status, &collab.CreatedAt, &collab.UpdatedAt,
-			&collab.ProjectName, &collab.ProjectDesc, &collab.OwnerUsername)
+		var collab Collaborator
+		err := rows.Scan(
+			&collab.ID,
+			&collab.UserID,
+			&collab.ProjectID,
+			&collab.Status,
+			&collab.CreatedAt,
+			&collab.UpdatedAt,
+		)
 		if err != nil {
-			continue
+			return nil, err
 		}
 		collaborations = append(collaborations, collab)
 	}
@@ -188,10 +216,17 @@ func (m *CollaboratorModel) GetUserAllCollaborations(userID uuid.UUID) ([]Collab
 	return collaborations, nil
 }
 
-// CheckCollaborationExists - Checks if collaboration already exists
-func (m *CollaboratorModel) CheckCollaborationExists(userID, projectID uuid.UUID) (bool, error) {
+// DeleteCollaboration - Removes a collaboration
+func (m *CollaboratorModel) DeleteCollaboration(collabID uuid.UUID) error {
+	query := `DELETE FROM collaborators WHERE id = $1`
+	_, err := m.DB.Exec(query, collabID)
+	return err
+}
+
+// CheckCollaborationExists - Checks if a collaboration already exists
+func (m *CollaboratorModel) CheckCollaborationExists(userID uuid.UUID, projectID uuid.UUID) (bool, error) {
 	query := `
-		SELECT COUNT(*) FROM collaborators 
+		SELECT COUNT(*) FROM collaborators
 		WHERE user_id = $1 AND project_id = $2
 	`
 
@@ -202,41 +237,4 @@ func (m *CollaboratorModel) CheckCollaborationExists(userID, projectID uuid.UUID
 	}
 
 	return count > 0, nil
-}
-
-// DeleteCollaboration - Removes a collaborator
-func (m *CollaboratorModel) DeleteCollaboration(collabID uuid.UUID) error {
-	query := `DELETE FROM collaborators WHERE id = $1`
-	_, err := m.DB.Exec(query, collabID)
-	return err
-}
-
-// GetApprovedCollaborators - Gets only approved collaborators for a project
-func (m *CollaboratorModel) GetApprovedCollaborators(projectID uuid.UUID) ([]CollaboratorWithDetails, error) {
-	query := `
-		SELECT c.id, c.status, c.created_at, c.updated_at, u.username, u.email
-		FROM collaborators c
-		JOIN users u ON c.user_id = u.id
-		WHERE c.project_id = $1 AND c.status = 'approved'
-		ORDER BY c.created_at DESC
-	`
-
-	rows, err := m.DB.Query(query, projectID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var collaborators []CollaboratorWithDetails
-	for rows.Next() {
-		var collab CollaboratorWithDetails
-		err := rows.Scan(&collab.ID, &collab.Status, &collab.CreatedAt, &collab.UpdatedAt,
-			&collab.Username, &collab.Email)
-		if err != nil {
-			continue
-		}
-		collaborators = append(collaborators, collab)
-	}
-
-	return collaborators, nil
 }
