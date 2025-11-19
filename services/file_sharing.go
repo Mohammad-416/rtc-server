@@ -75,7 +75,7 @@ func ShareFile(w http.ResponseWriter, r *http.Request) {
 
 	// Get sender and recipient users
 	userModel := &db.UserModel{DB: db.DB}
-	sender, err := userModel.GetUserByEmail(req.SenderEmail)
+	_, err := userModel.GetUserByEmail(req.SenderEmail)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{
@@ -165,7 +165,7 @@ func ShareCode(w http.ResponseWriter, r *http.Request) {
 
 	// Get sender and recipient users
 	userModel := &db.UserModel{DB: db.DB}
-	sender, err := userModel.GetUserByEmail(req.SenderEmail)
+	_, err := userModel.GetUserByEmail(req.SenderEmail)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{
@@ -234,7 +234,7 @@ func ShareBulkFiles(w http.ResponseWriter, r *http.Request) {
 
 	// Get sender and recipient users
 	userModel := &db.UserModel{DB: db.DB}
-	sender, err := userModel.GetUserByEmail(req.SenderEmail)
+	_, err := userModel.GetUserByEmail(req.SenderEmail)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{
