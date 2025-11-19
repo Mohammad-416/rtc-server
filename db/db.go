@@ -29,13 +29,27 @@ func InitDB() {
 	InitProjectTable()
 	log.Println("Initialized Project Table Successfully")
 
-	log.Println("Initializing Github Data Table")
-	InitGithubDataTable()
-	log.Println("Initialized Github Data Table Successfully")
+	log.Println("Initializing Token Table")
+	InitTokenTable()
+	log.Println("Initialized Token Table Successfully")
 
 	log.Println("Initializing Collaborator Table")
 	InitCollaboratorTable()
 	log.Println("Initialized Collaborator Table Successfully")
+
+	log.Println("Initializing Activity Table")
+	err = InitActivityTable()
+	if err != nil {
+		log.Fatal("Failed to initialize Activity Table: ", err)
+	}
+	log.Println("Initialized Activity Table Successfully")
+
+	log.Println("Initializing Version Control Tables")
+	err = InitVersionControlTables()
+	if err != nil {
+		log.Fatal("Failed to initialize Version Control Tables: ", err)
+	}
+	log.Println("Initialized Version Control Tables Successfully")
 }
 
 func InitUserTable() {
@@ -69,12 +83,12 @@ func InitProjectTable() {
 	}
 }
 
-func InitGithubDataTable() {
+func InitTokenTable() {
 	query := `
 	CREATE TABLE IF NOT EXISTS github_data (
 		id UUID PRIMARY KEY,
 		github_token TEXT NOT NULL,
-		username TEXT NOT NULL,
+		username TEXT UNIQUE NOT NULL,
 		user_id UUID REFERENCES users(id) ON DELETE CASCADE,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 	)`
