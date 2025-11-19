@@ -36,7 +36,7 @@ func main() {
 	// Create rate limiter (60 requests per minute, burst of 10)
 	rateLimiter := services.NewRateLimiter(60, 10)
 
-	// Apply middleware stack
+	// Apply services stack
 	handler := services.Recovery(
 		services.RequestLogger(
 			services.SecurityHeaders(
