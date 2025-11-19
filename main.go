@@ -2,7 +2,7 @@ package main
 
 import (
 	"app/urtc/db"
-	"app/urtc/middleware"
+	"app/urtc/services"
 	"app/urtc/routers"
 	"log"
 	"net/http"
@@ -28,16 +28,16 @@ func main() {
 	router := routers.SetupRoutes()
 
 	// Create rate limiter (60 requests per minute, burst of 10)
-	rateLimiter := middleware.NewRateLimiter(60, 10)
+	rateLimiter := services.NewRateLimiter(60, 10)
 
-	// Apply middleware stack
-	handler := middleware.Recovery(
-		middleware.RequestLogger(
-			middleware.SecurityHeaders(
-				middleware.CORS(
+	// Apply services stack
+	handler := services.Recovery(
+		services.RequestLogger(
+			services.SecurityHeaders(
+				services.CORS(
 					rateLimiter.Limit(
-						middleware.UserContext(
-							middleware.ProjectContext(
+						services.UserContext(
+							services.ProjectContext(
 								router,
 							),
 						),
