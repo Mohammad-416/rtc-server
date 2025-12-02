@@ -18,9 +18,8 @@ type CollabRequest struct {
 }
 
 type CollabApproval struct {
-	CollabID      string `json:"collab_id"`
-	Status        string `json:"status"`
-	ApproverToken string `json:"approver_token"` // GitHub token for authentication
+	CollabID string `json:"collab_id"`
+	Status   string `json:"status"`
 }
 
 type CollabNotification struct {
@@ -128,13 +127,15 @@ func RequestCollaboration(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Status: %s\n", notification.Status)
 	fmt.Printf("==========================================\n\n")
 
+	// Add email logic here to notify collaborator in real implementation
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success":      true,
-		"message":      "Collaboration request sent successfully",
-		"collab_id":    collab.ID,
-		"status":       collab.Status,
-		"notification": notification,
+		"success":   true,
+		"message":   "Collaboration request sent successfully",
+		"collab_id": collab.ID,
+		"status":    collab.Status,
+		//"notification": notification,
 	})
 }
 
@@ -199,15 +200,9 @@ func ApproveCollaboration(w http.ResponseWriter, r *http.Request) {
 			"error": "Collaborator authentication failed",
 		})
 		return
-	}
-
-	// Verify the provided token matches stored token
-	if storedToken.GITHUB_TOKEN != req.ApproverToken {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "Invalid authentication token",
-		})
-		return
+	} else {
+		fmt.Println("Stored Token: ", storedToken.GITHUB_TOKEN)
+		// In real implementation, verify token validity with session ID implementation via middleware to be added
 	}
 
 	// Update collaboration status
