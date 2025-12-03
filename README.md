@@ -59,5 +59,6 @@ Better activity logging and history
 
 
 **This Project is Licensed Under MIT License.**
-**github.com/Mohammad-416**
+
+**github.com/Mohammad-416** - 
 **2025-2026**
